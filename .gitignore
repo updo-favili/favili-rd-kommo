@@ -1,0 +1,11 @@
+node_modules/
+.next/
+.vercel/
+.env
+.env.local
+.env.*.local
+coverage/
+*.log
+
+*.tsbuildinfo
+kommo-fields.reference.json
