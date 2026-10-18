@@ -56,8 +56,8 @@ describe("Escola Favili",()=>{
   });
   it("busca oportunidade somente do mesmo formulário",async()=>{
     const client=new KommoClient("test","example");
-    vi.spyOn(client,"getLead").mockResolvedValueOnce({id:2,name:"Colônia",pipeline_id:8794271,status_id:5,_embedded:{tags:[{name:"colonia-de-ferias-2026"}]}}).mockResolvedValueOnce({id:1,name:"Matrícula",pipeline_id:8794271,status_id:6,_embedded:{tags:[{name:"matricula-2027-visita"}]}});
-    expect((await client.findOpenProductLead({id:10,name:"Teste",_embedded:{leads:[{id:1},{id:2}]}},8794271,"matricula-2027-visita"))?.id).toBe(1);
+    vi.spyOn(client,"getLead").mockResolvedValueOnce({id:2,name:"Colônia",pipeline_id:8794271,status_id:5,_embedded:{tags:[{name:"COLÔNIA DE FÉRIAS 2026"}]}}).mockResolvedValueOnce({id:1,name:"Matrícula",pipeline_id:8794271,status_id:6,_embedded:{tags:[{name:"MATRÍCULA 2027"}]}});
+    expect((await client.findOpenProductLead({id:10,name:"Teste",_embedded:{leads:[{id:1},{id:2}]}},8794271,"MATRÍCULA 2027"))?.id).toBe(1);
   });
   it("preserva a etapa de uma oportunidade existente",async()=>{
     vi.stubEnv("KOMMO_SUBDOMAIN","example"); vi.stubEnv("KOMMO_LONG_LIVED_TOKEN","fake");
@@ -121,6 +121,9 @@ describe("nomes visíveis enviados pelo RD",()=>{
     vi.spyOn(KommoClient.prototype,"findOpenProductLead").mockResolvedValue(undefined);
     const create=vi.spyOn(KommoClient.prototype,"createLead").mockResolvedValue({id:20,name:"Teste",pipeline_id:8794271,status_id:113083004});
     await syncConversion(parse(event,custom));
+    const expectedTag=event === "matricula-2027-visita" ? "MATRÍCULA 2027" : "COLÔNIA DE FÉRIAS 2026";
+    expect(create.mock.calls[0][0].tags).toEqual([expectedTag]);
+    expect(KommoClient.prototype.findOpenProductLead).toHaveBeenCalledWith(expect.anything(),8794271,expectedTag);
     const sent=create.mock.calls[0][0].customFields;
     expect(sent.map(f=>f.field_id)).toEqual([...ids]);
     expect(sent.find(f=>f.field_id===ids[0])?.values).toEqual([{value:"2"}]);

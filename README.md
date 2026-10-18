@@ -23,7 +23,7 @@ Origem: traffic_source → utm_source; traffic_medium → utm_medium; traffic_ca
 
 ## Oportunidades
 
-O contato é localizado por telefone/e-mail. Cada formulário possui uma oportunidade independente identificada pela tag de seu evento. Uma oportunidade aberta do mesmo formulário é atualizada mantendo sua etapa atual. Sem oportunidade aberta correspondente, cria uma em NOVOS LEADS - RD. Oportunidades sem a tag do evento não são reutilizadas automaticamente. Tags existentes são preservadas.
+O contato é localizado por telefone/e-mail. Cada formulário possui uma oportunidade independente identificada pela tag MATRÍCULA 2027 ou COLÔNIA DE FÉRIAS 2026, conforme o formulário (sem a tag RD). Uma oportunidade aberta do mesmo formulário é atualizada mantendo sua etapa atual. Sem oportunidade aberta correspondente, cria uma em NOVOS LEADS - RD. Oportunidades sem a tag correspondente ao formulário não são reutilizadas automaticamente. Tags existentes são preservadas.
 
 ## Webhooks
 

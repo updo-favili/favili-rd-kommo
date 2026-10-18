@@ -12,10 +12,12 @@ export type IgnoredRoute = { ignoredReason: string };
 export const schoolForms = {
   "matricula-2027-visita": {
     product: "Matrícula 2027",
+    tag: "MATRÍCULA 2027",
     fieldIds: { cf_quantidade_de_filhos: 2017912, cf_series_2027: 2017914, cf_periodo_da_visita: 2017916 },
   },
   "colonia-de-ferias-2026": {
     product: "Colônia de Férias 2026",
+    tag: "COLÔNIA DE FÉRIAS 2026",
     fieldIds: { cf_quantidade_de_filhos: 2017918, cf_colonia_criancas: 2017920,
       cf_colonia_tem_aluno_en: 2017922, cf_colonia_semanas: 2017924,
       cf_colonia_pagamento: 2017926, cf_colonia_indicacao_amigo: 2017928,
@@ -37,7 +39,7 @@ export function routeForConversion(conversion: ParsedRdConversion): ProductRoute
     leadName: form.product + " | " + conversion.name,
     source: "Landing Page",
     pipelineName: "Escola", stageName: "NOVOS LEADS - RD",
-    tags: ["RD", conversion.eventIdentifier],
+    tags: [form.tag],
     fieldIds: form.fieldIds,
     customFieldNames: Object.keys(form.fieldIds),
   };
