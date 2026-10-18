@@ -36,7 +36,7 @@ export function routeForConversion(conversion: ParsedRdConversion): ProductRoute
   const form = schoolForms[conversion.eventIdentifier];
   return {
     product: form.product,
-    leadName: form.product + " | " + conversion.name,
+    leadName: form.product,
     source: "Landing Page",
     pipelineName: "Escola", stageName: "NOVOS LEADS - RD",
     tags: [form.tag],
