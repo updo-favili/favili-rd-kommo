@@ -42,3 +42,5 @@ Sincronização local desativada. Nenhum deploy ou webhook RD foi cadastrado nes
 Copie .env.example para .env.local e configure as credenciais localmente. Não versione segredos. Defina RD_WEBHOOK_SECRET exclusivo antes de testar o endpoint.
 
 Comandos: npm ci, npm test, npm run lint, npm run build.
+
+Os campos personalizados aceitam tanto as chaves cf_... quanto os nomes visíveis enviados pelas automações RD (por exemplo, Quantidade de filhos e Colônia Semanas), mantendo o ID de destino específico de cada formulário.

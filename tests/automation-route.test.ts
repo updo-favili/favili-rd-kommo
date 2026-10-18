@@ -101,3 +101,29 @@ describe("webhook compartilhado escola",()=>{
     const response=await handleRdWebhook(request,{route:"escola",secret:"test-secret"}); expect((await response.json()).receipt.eventIdentifier).toBe(event);
   });
 });
+
+describe("nomes visíveis enviados pelo RD",()=>{
+  const custom = {
+    "Quantidade de filhos":"2", "Séries 2027":"1º ano", "Período da visita":"Manhã",
+    "Colônia Crianças":"Criança de teste", "Colônia Tem Aluno EN":"Sim",
+    "Colônia Semanas":["Semana 1","Semana 2"], "Colônia Pagamento":"Pix",
+    "Colônia Indicação Amigo":"Não", "Colônia Valor Estimado":"500",
+  };
+  it.each([
+    ["matricula-2027-visita",[2017912,2017914,2017916]],
+    ["colonia-de-ferias-2026",[2017918,2017920,2017922,2017924,2017926,2017928,2017930]],
+  ] as const)("sincroniza somente a aba de %s mesmo com histórico dos dois formulários",async(event,ids)=>{
+    vi.stubEnv("KOMMO_SUBDOMAIN","example"); vi.stubEnv("KOMMO_LONG_LIVED_TOKEN","fake");
+    vi.spyOn(KommoClient.prototype,"resolvePipeline").mockResolvedValue({pipelineId:8794271,statusId:113083004});
+    vi.spyOn(KommoClient.prototype,"getCustomFields").mockResolvedValue(fields);
+    vi.spyOn(KommoClient.prototype,"findContact").mockResolvedValue({id:10,name:"Teste"});
+    vi.spyOn(KommoClient.prototype,"updateContact").mockResolvedValue(undefined);
+    vi.spyOn(KommoClient.prototype,"findOpenProductLead").mockResolvedValue(undefined);
+    const create=vi.spyOn(KommoClient.prototype,"createLead").mockResolvedValue({id:20,name:"Teste",pipeline_id:8794271,status_id:113083004});
+    await syncConversion(parse(event,custom));
+    const sent=create.mock.calls[0][0].customFields;
+    expect(sent.map(f=>f.field_id)).toEqual([...ids]);
+    expect(sent.find(f=>f.field_id===ids[0])?.values).toEqual([{value:"2"}]);
+    if(event==="colonia-de-ferias-2026") expect(sent.find(f=>f.field_id===2017924)?.values).toEqual([{value:"Semana 1; Semana 2"}]);
+  });
+});

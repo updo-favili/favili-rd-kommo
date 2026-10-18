@@ -81,7 +81,10 @@ export function buildLeadCustomFields(fields: KommoCustomField[], data: Semantic
   for (const [rdKey, value] of Object.entries(data.custom)) {
     const cleanRdKey = rdKey.replace(/^cf_/, "").replace(/_/g, " ");
     const candidateNames = [cleanRdKey, rdKey, ...(customAliases[normalizeText(cleanRdKey)] ?? [])];
-    const explicitId = data.fieldIds?.[rdKey];
+    const normalizedKey = normalizeText(cleanRdKey);
+    const explicitId = Object.entries(data.fieldIds ?? {}).find(([key]) =>
+      normalizeText(key.replace(/^cf_/, "").replace(/_/g, " ")) === normalizedKey,
+    )?.[1];
     const field = data.fieldIds
       ? fields.find((item) => item.id === explicitId)
       : findField(fields, candidateNames);
