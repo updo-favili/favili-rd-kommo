@@ -20,7 +20,7 @@ export const schoolForms = {
     product: "Matrícula 2027",
     tag: "WHATSAPP MATRÍCULA",
     interestTag: "MATRÍCULA 2027",
-    fieldIds: {},
+    fieldIds: { cf_quando_voce_gostaria_de_visitar_a_escola: 2017916 },
   },
   "matricula-2027-visita": {
     product: "Matrícula 2027",

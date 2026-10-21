@@ -9,7 +9,7 @@ const cases = [["whatsapp-lp-matricula-escola", "WHATSAPP MATRÍCULA", "Matrícu
 afterEach(()=>{vi.restoreAllMocks();vi.unstubAllEnvs();});
 it.each(cases)("roteia %s com tag própria sem campos históricos",(event,tag,title)=>{
   const conversion=parseRdWebhook({event_identifier:event,contact:{email:"teste@example.com",cf_quantidade_de_filhos:"2",cf_series_2027:"histórico"}});
-  expect(routeForConversion(conversion)).toMatchObject({pipelineName:"Escola",stageName:"NOVOS LEADS - RD",tags:[tag,title.toUpperCase()],leadName:title,fieldIds:{},customFieldNames:[]});
+  expect(routeForConversion(conversion)).toMatchObject({pipelineName:"Escola",stageName:"NOVOS LEADS - RD",tags:[tag,title.toUpperCase()],leadName:title,customFieldNames:event === "whatsapp-lp-matricula-escola" ? ["cf_quando_voce_gostaria_de_visitar_a_escola"] : []});
 });
 it.each(cases)("aceita %s pelo webhook único",async(event)=>{
   vi.stubEnv("RD_WEBHOOK_SECRET","test-secret");vi.stubEnv("KOMMO_SYNC_ENABLED","false");
@@ -36,4 +36,18 @@ it("não confunde formulário com WhatsApp ao compartilhar tag de interesse",asy
   const client=new KommoClient("fake","example");
   vi.spyOn(client,"getLead").mockResolvedValueOnce({id:2,name:"Matrícula",pipeline_id:8794271,status_id:5,_embedded:{tags:[{name:"WHATSAPP MATRÍCULA"},{name:"MATRÍCULA 2027"}]}}).mockResolvedValueOnce({id:1,name:"Matrícula",pipeline_id:8794271,status_id:5,_embedded:{tags:[{name:"MATRÍCULA 2027"}]}});
   expect((await client.findOpenProductLead({id:10,name:"Teste",_embedded:{leads:[{id:1},{id:2}]}},8794271,"MATRÍCULA 2027"))?.id).toBe(1);
+});
+
+it.each(["cf_quando_voce_gostaria_de_visitar_a_escola", "Quando você gostaria de visitar a escola?"])("envia texto livre de %s somente no WhatsApp de matrícula",async(key)=>{
+  vi.stubEnv("KOMMO_SUBDOMAIN","example");vi.stubEnv("KOMMO_LONG_LIVED_TOKEN","fake");
+  vi.spyOn(KommoClient.prototype,"resolvePipeline").mockResolvedValue({pipelineId:8794271,statusId:113083004});
+  vi.spyOn(KommoClient.prototype,"getCustomFields").mockResolvedValue([{id:2017916,name:"Período da visita",type:"text"}]);
+  vi.spyOn(KommoClient.prototype,"findContact").mockResolvedValue({id:10,name:"Teste"});
+  vi.spyOn(KommoClient.prototype,"updateContact").mockResolvedValue(undefined);
+  vi.spyOn(KommoClient.prototype,"findOpenProductLead").mockResolvedValue({id:20,name:"Teste",pipeline_id:8794271,status_id:68954635});
+  const update=vi.spyOn(KommoClient.prototype,"updateLead").mockResolvedValue(undefined);
+  for(const event of ["whatsapp-lp-matricula-escola","whatsapp-lp-colonia-escola"]){
+    await syncConversion(parseRdWebhook({event_identifier:event,contact:{email:"teste@example.com",[key]:"Segunda-feira às 10h",cf_periodo_da_visita:"Tarde"}}));
+    expect(update.mock.lastCall?.[3]).toEqual(event === "whatsapp-lp-matricula-escola" ? [{field_id:2017916,values:[{value:"Segunda-feira às 10h"}]}] : []);
+  }
 });
