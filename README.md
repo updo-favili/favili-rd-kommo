@@ -51,3 +51,5 @@ Os campos personalizados aceitam tanto as chaves cf_... quanto os nomes visívei
 - whatsapp-lp-colonia-escola: título Colônia de Férias 2026, tag WHATSAPP COLÔNIA. Identificador informado por inferência do nome; confirmar no primeiro teste real do RD.
 
 Ambas usam o mesmo webhook /api/webhooks/rd/escola/SEGREDO e entram em Escola → NOVOS LEADS - RD. Adicione essas conversões aos critérios da automação RD. Nome, telefone, e-mail e origem seguem o tratamento existente. Campos específicos dos formulários não são copiados do histórico em uma entrada de WhatsApp. Cada entrada procura sua própria tag: um reenvio atualiza a oportunidade aberta correspondente sem alterar a etapa; se não existir, cria uma oportunidade separada. Não inicia mensagem de WhatsApp automaticamente.
+
+Entradas de WhatsApp também recebem a tag de interesse: WHATSAPP MATRÍCULA + MATRÍCULA 2027; WHATSAPP COLÔNIA + COLÔNIA DE FÉRIAS 2026. A busca mantém oportunidades de formulário e WhatsApp separadas mesmo compartilhando a tag de interesse.

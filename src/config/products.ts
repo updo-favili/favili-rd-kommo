@@ -13,11 +13,13 @@ export const schoolForms = {
   "whatsapp-lp-colonia-escola": {
     product: "Colônia de Férias 2026",
     tag: "WHATSAPP COLÔNIA",
+    interestTag: "COLÔNIA DE FÉRIAS 2026",
     fieldIds: {},
   },
   "whatsapp-lp-matricula-escola": {
     product: "Matrícula 2027",
     tag: "WHATSAPP MATRÍCULA",
+    interestTag: "MATRÍCULA 2027",
     fieldIds: {},
   },
   "matricula-2027-visita": {
@@ -49,7 +51,7 @@ export function routeForConversion(conversion: ParsedRdConversion): ProductRoute
     leadName: form.product,
     source: "Landing Page",
     pipelineName: "Escola", stageName: "NOVOS LEADS - RD",
-    tags: [form.tag],
+    tags: "interestTag" in form ? [form.tag, form.interestTag] : [form.tag],
     fieldIds: form.fieldIds,
     customFieldNames: Object.keys(form.fieldIds),
   };

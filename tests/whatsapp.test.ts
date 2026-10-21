@@ -9,7 +9,7 @@ const cases = [["whatsapp-lp-matricula-escola", "WHATSAPP MATRÍCULA", "Matrícu
 afterEach(()=>{vi.restoreAllMocks();vi.unstubAllEnvs();});
 it.each(cases)("roteia %s com tag própria sem campos históricos",(event,tag,title)=>{
   const conversion=parseRdWebhook({event_identifier:event,contact:{email:"teste@example.com",cf_quantidade_de_filhos:"2",cf_series_2027:"histórico"}});
-  expect(routeForConversion(conversion)).toMatchObject({pipelineName:"Escola",stageName:"NOVOS LEADS - RD",tags:[tag],leadName:title,fieldIds:{},customFieldNames:[]});
+  expect(routeForConversion(conversion)).toMatchObject({pipelineName:"Escola",stageName:"NOVOS LEADS - RD",tags:[tag,title.toUpperCase()],leadName:title,fieldIds:{},customFieldNames:[]});
 });
 it.each(cases)("aceita %s pelo webhook único",async(event)=>{
   vi.stubEnv("RD_WEBHOOK_SECRET","test-secret");vi.stubEnv("KOMMO_SYNC_ENABLED","false");
@@ -28,6 +28,12 @@ it.each(cases)("reenvio de %s atualiza sua oportunidade preservando etapa e igno
   const create=vi.spyOn(KommoClient.prototype,"createLead");
   await syncConversion(parseRdWebhook({event_identifier:event,contact:{name:"Teste",email:"teste@example.com","Quantidade de filhos":"2","Colônia Semanas":"histórico"}}));
   expect(find).toHaveBeenCalledWith(expect.anything(),8794271,tag);
-  expect(update).toHaveBeenCalledWith(20,title,68954635,[],[tag],[]);
+  expect(update).toHaveBeenCalledWith(20,title,68954635,[],[tag,title.toUpperCase()],[]);
   expect(create).not.toHaveBeenCalled();
+});
+
+it("não confunde formulário com WhatsApp ao compartilhar tag de interesse",async()=>{
+  const client=new KommoClient("fake","example");
+  vi.spyOn(client,"getLead").mockResolvedValueOnce({id:2,name:"Matrícula",pipeline_id:8794271,status_id:5,_embedded:{tags:[{name:"WHATSAPP MATRÍCULA"},{name:"MATRÍCULA 2027"}]}}).mockResolvedValueOnce({id:1,name:"Matrícula",pipeline_id:8794271,status_id:5,_embedded:{tags:[{name:"MATRÍCULA 2027"}]}});
+  expect((await client.findOpenProductLead({id:10,name:"Teste",_embedded:{leads:[{id:1},{id:2}]}},8794271,"MATRÍCULA 2027"))?.id).toBe(1);
 });

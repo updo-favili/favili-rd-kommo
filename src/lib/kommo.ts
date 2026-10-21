@@ -155,6 +155,8 @@ export class KommoClient {
         && !lead.closed_at
         && ![142, 143].includes(lead.status_id)
         && lead._embedded?.tags?.some((tag) => tag.name === formTag)
+        && (!(formTag === "MATRÍCULA 2027" || formTag === "COLÔNIA DE FÉRIAS 2026")
+          || !lead._embedded?.tags?.some((tag) => ["WHATSAPP MATRÍCULA", "WHATSAPP COLÔNIA"].includes(tag.name)))
       ) {
         return lead;
       }
