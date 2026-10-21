@@ -10,6 +10,16 @@ export type ProductRoute = {
 };
 export type IgnoredRoute = { ignoredReason: string };
 export const schoolForms = {
+  "whatsapp-lp-colonia-escola": {
+    product: "Colônia de Férias 2026",
+    tag: "WHATSAPP COLÔNIA",
+    fieldIds: {},
+  },
+  "whatsapp-lp-matricula-escola": {
+    product: "Matrícula 2027",
+    tag: "WHATSAPP MATRÍCULA",
+    fieldIds: {},
+  },
   "matricula-2027-visita": {
     product: "Matrícula 2027",
     tag: "MATRÍCULA 2027",

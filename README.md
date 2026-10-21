@@ -44,3 +44,10 @@ Copie .env.example para .env.local e configure as credenciais localmente. Não v
 Comandos: npm ci, npm test, npm run lint, npm run build.
 
 Os campos personalizados aceitam tanto as chaves cf_... quanto os nomes visíveis enviados pelas automações RD (por exemplo, Quantidade de filhos e Colônia Semanas), mantendo o ID de destino específico de cada formulário.
+
+## Entradas de WhatsApp das LPs
+
+- whatsapp-lp-matricula-escola: título Matrícula 2027, tag WHATSAPP MATRÍCULA.
+- whatsapp-lp-colonia-escola: título Colônia de Férias 2026, tag WHATSAPP COLÔNIA. Identificador informado por inferência do nome; confirmar no primeiro teste real do RD.
+
+Ambas usam o mesmo webhook /api/webhooks/rd/escola/SEGREDO e entram em Escola → NOVOS LEADS - RD. Adicione essas conversões aos critérios da automação RD. Nome, telefone, e-mail e origem seguem o tratamento existente. Campos específicos dos formulários não são copiados do histórico em uma entrada de WhatsApp. Cada entrada procura sua própria tag: um reenvio atualiza a oportunidade aberta correspondente sem alterar a etapa; se não existir, cria uma oportunidade separada. Não inicia mensagem de WhatsApp automaticamente.
