@@ -1,4 +1,4 @@
-import { vestibularEvent } from "@/config/vestibular";
+import { isVestibularEvent } from "@/config/vestibular";
 import { NextRequest, NextResponse } from "next/server";
 import { conversionIdentifierFromContact, parseRdWebhook, sanitizedReceipt, unwrapRdAutomationPayload } from "@/lib/rd";
 import { syncConversion } from "@/lib/sync";
@@ -57,13 +57,13 @@ export async function handleRdWebhook(
         return NextResponse.json({ ok: false, error: "Envie um contato por requisição." }, { status: 400 });
       }
       const contact = unwrapRdAutomationPayload(record);
-      const detected = (automationRoute === "escola" || automationRoute === vestibularEvent)
+      const detected = (automationRoute === "escola" || isVestibularEvent(automationRoute))
         ? conversionIdentifierFromContact({ last_conversion: contact.last_conversion })
         : conversionIdentifierFromContact(contact);
       if (automationRoute === "escola" && (!detected || !isSchoolEvent(detected))) {
         return NextResponse.json({ ok: true, status: "ignored", reason: "Última conversão não pertence aos formulários da escola" });
       }
-      if (automationRoute === vestibularEvent && !detected) {
+      if (isVestibularEvent(automationRoute) && !detected) {
         return NextResponse.json({ ok: true, status: "ignored", reason: "Última conversão sem identificador" });
       }
       if (automationRoute !== "escola" && detected && detected !== automationRoute) {

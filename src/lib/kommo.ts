@@ -167,6 +167,28 @@ export class KommoClient {
     return undefined;
   }
 
+  async findLeadByRegistration(fieldId: number, value: string): Promise<KommoLead | undefined> {
+    let found: KommoLead | undefined;
+    for (let page = 1; ; page++) {
+      const data = await this.request<Collection<KommoLead> & { _links?: { next?: unknown } }>(
+        "/leads?limit=250&page=" + page + "&query=" + encodeURIComponent(value), {}, 0, "localizar inscrição",
+      );
+      for (const lead of data?._embedded?.leads ?? []) {
+        if (!lead.custom_fields_values?.some((field) => field.field_id === fieldId
+          && field.values?.some((entry) => String(entry.value) === value))) continue;
+        if (found && found.id !== lead.id) throw new Error("Mais de uma oportunidade encontrada para a inscrição; revisão necessária.");
+        found = lead;
+      }
+      if (!data?._links?.next) return found;
+    }
+  }
+
+  async updateLeadFields(id: number, customFields: KommoFieldValue[]): Promise<void> {
+    await this.request("/leads/" + id, {
+      method: "PATCH", body: JSON.stringify({ custom_fields_values: customFields }),
+    }, 0, "atualizar campos da inscrição");
+  }
+
   async createLead(input: {
     name: string;
     pipelineId: number;

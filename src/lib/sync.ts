@@ -7,7 +7,7 @@ export async function syncConversion(conversion: ParsedRdConversion) {
   const route = routeForConversion(conversion);
   if (!route) return { status: "ignored" as const, reason: "Evento não mapeado" };
   if ("ignoredReason" in route) return { status: "ignored" as const, reason: route.ignoredReason };
-  if (!conversion.phone && !conversion.email) {
+  if (!route.updateOnly && !conversion.phone && !conversion.email) {
     throw new Error("Conversão sem telefone e sem e-mail; não é possível identificar o contato.");
   }
 
@@ -18,7 +18,7 @@ export async function syncConversion(conversion: ParsedRdConversion) {
 
   const kommo = new KommoClient(token, subdomain);
   const [{ pipelineId, statusId }, leadFields] = await Promise.all([
-    kommo.resolvePipeline(route.pipelineName, route.stageName),
+    route.updateOnly ? Promise.resolve({ pipelineId: 0, statusId: 0 }) : kommo.resolvePipeline(route.pipelineName, route.stageName),
     kommo.getCustomFields("leads"),
   ]);
 
@@ -27,14 +27,14 @@ export async function syncConversion(conversion: ParsedRdConversion) {
   const idFromCustomFields = findCustomValue(conversion.customFields, ["id da conversao", "conversion id", "id conversao"]);
   const selectedCustomFields = selectCustomFields(conversion.customFields, route.customFieldNames);
   const mapped = buildLeadCustomFields(leadFields, {
-    product: route.product,
-    source: route.source,
-    rdOrigin: origin,
-    event: conversion.eventIdentifier,
-    eventId: idFromCustomFields,
-    eventDate: conversion.eventTimestamp,
-    rdUuid: conversion.rdContactUuid,
-    ...utms,
+    product: route.updateOnly ? undefined : route.product,
+    source: route.updateOnly ? undefined : route.source,
+    rdOrigin: route.updateOnly ? undefined : origin,
+    event: route.updateOnly ? undefined : conversion.eventIdentifier,
+    eventId: route.updateOnly ? undefined : idFromCustomFields,
+    eventDate: route.updateOnly ? undefined : conversion.eventTimestamp,
+    rdUuid: route.updateOnly ? undefined : conversion.rdContactUuid,
+    ...(route.updateOnly ? {} : utms),
     custom: { ...route.derivedCustomFields, ...selectedCustomFields },
     clearCustomFields: route.clearCustomFields,
     fieldIds: route.fieldIds,
@@ -48,6 +48,18 @@ export async function syncConversion(conversion: ParsedRdConversion) {
     fieldId: route.identityFieldId,
     value: String(mapped.fields.find((field) => field.field_id === route.identityFieldId)?.values?.[0]?.value ?? ""),
   } : undefined;
+
+  if (route.updateOnly) {
+    if (!identity?.value) throw new Error("Número da inscrição ausente.");
+    const existing = await kommo.findLeadByRegistration(identity.fieldId, identity.value);
+    if (!existing) throw new Error("Inscrição ainda não encontrada na Kommo; nenhuma oportunidade foi criada.");
+    const changed = mapped.fields.filter((field) => JSON.stringify(field.values) !== JSON.stringify(
+      existing.custom_fields_values?.find((current) => current.field_id === field.field_id)?.values,
+    ));
+    if (changed.length) await kommo.updateLeadFields(existing.id, changed);
+    return { status: changed.length ? "updated" as const : "unchanged" as const,
+      leadId: existing.id, mappedFields: mapped.mappedFields, warnings: mapped.warnings };
+  }
 
   let contact = await kommo.findContact(conversion.phone, conversion.email);
   if (contact) await kommo.updateContact(contact.id, conversion.name, conversion.phone, conversion.email);

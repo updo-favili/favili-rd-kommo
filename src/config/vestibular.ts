@@ -12,3 +12,8 @@ export const vestibularFieldIds: Record<string, number> = {
   "Vestibular - Hora da prova": 2018113,
   "Vestibular - Link Minha inscrição": 2018115,
 };
+
+export const vestibularUpdateEvent = "vestibular-2027-1-atualizacao";
+export function isVestibularEvent(event: string): boolean {
+  return event === vestibularEvent || event === vestibularUpdateEvent;
+}

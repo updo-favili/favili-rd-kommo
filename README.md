@@ -65,3 +65,11 @@ Destino: Faculdade (8794275) → VESTIBULAR 2027.1 (113385224). Título: Vestibu
 Número da inscrição e código são obrigatórios; caso ausentes, nenhuma gravação de contato ou oportunidade é iniciada. Todos os campos são enviados junto com a criação. Reenvios procuram oportunidade aberta pelo contato, funil, tag e número de inscrição; preservam a etapa. Inscrições diferentes não sobrescrevem códigos entre si. Automação RD precisa informar last_conversion; nunca usamos first_conversion nessa rota.
 
 O disparo de mensagem ao aluno não é implementado por este serviço: configurar na Kommo, condicionado ao código preenchido e evitando repetição de envio por inscrição. Ainda requer teste real do webhook.
+
+## Atualizações do vestibular
+
+Nova inscrição continua em vestibular-2027-1-inscricao. Alterações de horário ou código usam vestibular-2027-1-atualizacao e POST /api/webhooks/rd/vestibular-2027-1-atualizacao/SEGREDO. Configure um segundo fluxo RD, com reentrada para receber cada atualização.
+
+A atualização exige o número da inscrição e procura correspondência exata no campo 2018097, inclusive se a oportunidade mudou de funil ou foi encerrada. Mais de uma correspondência causa erro sem gravar. Inscrição ainda inexistente também causa erro, sem criar contato ou oportunidade: verificar a entrega da inscrição inicial e reenviar a atualização.
+
+Somente campos enviados e alterados são gravados. Ausência de código preserva o existente; código novo informado é atualizado. Não altera nome, etapa, responsável ou tags. A integração não envia mensagens; configure a mensagem inicial na Kommo apenas na criação/entrada inicial, sem gatilho genérico de alteração de campos. Essa configuração da Kommo não foi modificada pelo código.
