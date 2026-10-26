@@ -1,9 +1,12 @@
+import { vestibularEvent, vestibularFieldIds } from "@/config/vestibular";
 import type { ParsedRdConversion } from "@/lib/rd";
 
 export type ProductRoute = {
   product: string; leadName: string; source: "Landing Page";
   pipelineName: string; stageName: string; tags: string[];
   fieldIds: Record<string, number>;
+  identityFieldId?: number;
+  requiredFieldIds?: number[];
   derivedCustomFields?: Record<string, unknown>;
   clearCustomFields?: string[];
   customFieldNames: string[];
@@ -44,6 +47,12 @@ export function obsoleteManagedTags(_activeTags: string[]): string[] {
   return [];
 }
 export function routeForConversion(conversion: ParsedRdConversion): ProductRoute | undefined {
+  if (conversion.eventIdentifier === vestibularEvent) return {
+    product: "Vestibular 2027.1", leadName: "Vestibular 2027.1", source: "Landing Page",
+    pipelineName: "Faculdade", stageName: "VESTIBULAR 2027.1", tags: ["VESTIBULAR 2027.1"],
+    fieldIds: vestibularFieldIds, customFieldNames: Object.keys(vestibularFieldIds),
+    identityFieldId: 2018097, requiredFieldIds: [2018097, 2018099],
+  };
   if (!isSchoolEvent(conversion.eventIdentifier)) return undefined;
   const form = schoolForms[conversion.eventIdentifier];
   return {
@@ -55,4 +64,8 @@ export function routeForConversion(conversion: ParsedRdConversion): ProductRoute
     fieldIds: form.fieldIds,
     customFieldNames: Object.keys(form.fieldIds),
   };
+}
+
+export function isSupportedEvent(event: string): boolean {
+  return isSchoolEvent(event) || event === vestibularEvent;
 }

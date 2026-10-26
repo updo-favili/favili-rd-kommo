@@ -40,6 +40,15 @@ export async function syncConversion(conversion: ParsedRdConversion) {
     fieldIds: route.fieldIds,
   });
 
+  for (const fieldId of route.requiredFieldIds ?? []) {
+    const value = mapped.fields.find((field) => field.field_id === fieldId)?.values?.[0]?.value;
+    if (!String(value ?? "").trim()) throw new Error("Campo obrigatório do vestibular ausente: " + fieldId);
+  }
+  const identity = route.identityFieldId ? {
+    fieldId: route.identityFieldId,
+    value: String(mapped.fields.find((field) => field.field_id === route.identityFieldId)?.values?.[0]?.value ?? ""),
+  } : undefined;
+
   let contact = await kommo.findContact(conversion.phone, conversion.email);
   if (contact) await kommo.updateContact(contact.id, conversion.name, conversion.phone, conversion.email);
   else contact = await kommo.createContact(conversion.name, conversion.phone, conversion.email);
@@ -49,7 +58,9 @@ export async function syncConversion(conversion: ParsedRdConversion) {
     : undefined;
   if (company) await kommo.ensureCompanyLink("contacts", contact.id, company.id);
 
-  const existing = await kommo.findOpenProductLead(contact, pipelineId, route.tags[0]);
+  const existing = identity
+    ? await kommo.findOpenProductLead(contact, pipelineId, route.tags[0], identity)
+    : await kommo.findOpenProductLead(contact, pipelineId, route.tags[0]);
   if (existing) {
     await kommo.updateLead(
       existing.id,

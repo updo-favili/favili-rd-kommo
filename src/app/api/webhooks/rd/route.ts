@@ -1,8 +1,9 @@
+import { vestibularEvent } from "@/config/vestibular";
 import { NextRequest, NextResponse } from "next/server";
 import { conversionIdentifierFromContact, parseRdWebhook, sanitizedReceipt, unwrapRdAutomationPayload } from "@/lib/rd";
 import { syncConversion } from "@/lib/sync";
 import { KommoError, safeKommoErrorDetail } from "@/lib/kommo";
-import { isSchoolEvent } from "@/config/products";
+import { isSchoolEvent, isSupportedEvent } from "@/config/products";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -45,7 +46,7 @@ export async function handleRdWebhook(
     const automationRoute = pathCredentials?.route || request.nextUrl.searchParams.get("route")?.trim();
     const isStandardWebhook = "event_identifier" in record && "contact" in record;
 
-    if (automationRoute && automationRoute !== "escola" && !isSchoolEvent(automationRoute)) {
+    if (automationRoute && automationRoute !== "escola" && !isSupportedEvent(automationRoute)) {
       return NextResponse.json({ ok: true, status: "ignored", reason: "Rota não configurada" });
     }
     if (isStandardWebhook && automationRoute && automationRoute !== "escola" && record.event_identifier !== automationRoute) {
@@ -56,11 +57,14 @@ export async function handleRdWebhook(
         return NextResponse.json({ ok: false, error: "Envie um contato por requisição." }, { status: 400 });
       }
       const contact = unwrapRdAutomationPayload(record);
-      const detected = automationRoute === "escola"
+      const detected = (automationRoute === "escola" || automationRoute === vestibularEvent)
         ? conversionIdentifierFromContact({ last_conversion: contact.last_conversion })
         : conversionIdentifierFromContact(contact);
       if (automationRoute === "escola" && (!detected || !isSchoolEvent(detected))) {
         return NextResponse.json({ ok: true, status: "ignored", reason: "Última conversão não pertence aos formulários da escola" });
+      }
+      if (automationRoute === vestibularEvent && !detected) {
+        return NextResponse.json({ ok: true, status: "ignored", reason: "Última conversão sem identificador" });
       }
       if (automationRoute !== "escola" && detected && detected !== automationRoute) {
         return NextResponse.json({ ok: true, status: "ignored", reason: "Última conversão diferente da rota" });
@@ -71,7 +75,7 @@ export async function handleRdWebhook(
     }
 
     const conversion = parseRdWebhook(body);
-    if (!isSchoolEvent(conversion.eventIdentifier)) {
+    if (!isSupportedEvent(conversion.eventIdentifier) || (automationRoute === "escola" && !isSchoolEvent(conversion.eventIdentifier))) {
       return NextResponse.json({ ok: true, status: "ignored", reason: "Evento não mapeado" });
     }
     const receipt = sanitizedReceipt(conversion);

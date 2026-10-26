@@ -145,6 +145,7 @@ export class KommoClient {
     contact: KommoContact,
     pipelineId: number,
     formTag: string,
+    identity?: { fieldId: number; value: string },
   ): Promise<KommoLead | undefined> {
     const ids = contact._embedded?.leads?.map((lead) => lead.id) ?? [];
     for (const id of [...ids].reverse()) {
@@ -152,6 +153,8 @@ export class KommoClient {
       if (
         lead
         && lead.pipeline_id === pipelineId
+        && (!identity || lead.custom_fields_values?.some((field) => field.field_id === identity.fieldId
+          && field.values?.some((entry) => String(entry.value) === identity.value)))
         && !lead.closed_at
         && ![142, 143].includes(lead.status_id)
         && lead._embedded?.tags?.some((tag) => tag.name === formTag)

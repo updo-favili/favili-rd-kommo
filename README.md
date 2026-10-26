@@ -55,3 +55,13 @@ Ambas usam o mesmo webhook /api/webhooks/rd/escola/SEGREDO e entram em Escola �
 Entradas de WhatsApp também recebem a tag de interesse: WHATSAPP MATRÍCULA + MATRÍCULA 2027; WHATSAPP COLÔNIA + COLÔNIA DE FÉRIAS 2026. A busca mantém oportunidades de formulário e WhatsApp separadas mesmo compartilhando a tag de interesse.
 
 WhatsApp Matrícula: cf_quando_voce_gostaria_de_visitar_a_escola (ou Quando você gostaria de visitar a escola?) → Período da visita, ID 2017916, aba Escola Matrícula. Preserva o texto livre; ausência não apaga o valor existente. WhatsApp Colônia ignora esse campo. O formulário de Matrícula continua usando cf_periodo_da_visita.
+
+## Vestibular 2027.1
+
+Evento: vestibular-2027-1-inscricao. Webhook próprio: /api/webhooks/rd/vestibular-2027-1-inscricao/SEGREDO (mesmo RD_WEBHOOK_SECRET). Não use a rota escola para vestibular.
+
+Destino: Faculdade (8794275) → VESTIBULAR 2027.1 (113385224). Título: Vestibular 2027.1. Tag: VESTIBULAR 2027.1. Dez campos da aba Faculdade Vestibular mapeados por IDs em src/config/vestibular.ts, usando os nomes visíveis recebidos no RD. Nomes técnicos cf_ diferentes ainda precisam ser confirmados pelo payload real.
+
+Número da inscrição e código são obrigatórios; caso ausentes, nenhuma gravação de contato ou oportunidade é iniciada. Todos os campos são enviados junto com a criação. Reenvios procuram oportunidade aberta pelo contato, funil, tag e número de inscrição; preservam a etapa. Inscrições diferentes não sobrescrevem códigos entre si. Automação RD precisa informar last_conversion; nunca usamos first_conversion nessa rota.
+
+O disparo de mensagem ao aluno não é implementado por este serviço: configurar na Kommo, condicionado ao código preenchido e evitando repetição de envio por inscrição. Ainda requer teste real do webhook.
