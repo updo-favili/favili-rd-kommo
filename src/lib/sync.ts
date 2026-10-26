@@ -40,6 +40,15 @@ export async function syncConversion(conversion: ParsedRdConversion) {
     fieldIds: route.fieldIds,
   });
 
+  const course = route.courseFieldId
+    ? String(mapped.fields.find((field) => field.field_id === route.courseFieldId)?.values?.[0]?.value ?? "").trim().replace(/\s+/g, " ")
+    : "";
+  const courseTag = course ? "CURSO: " + course.toLocaleUpperCase("pt-BR") : undefined;
+  if (courseTag) route.tags.push(courseTag);
+  const oldCourseTags = (tags?: Array<{ name: string }>) => courseTag
+    ? (tags ?? []).filter((tag) => tag.name.startsWith("CURSO: ") && tag.name !== courseTag).map((tag) => tag.name)
+    : [];
+
   for (const fieldId of route.requiredFieldIds ?? []) {
     const value = mapped.fields.find((field) => field.field_id === fieldId)?.values?.[0]?.value;
     if (!String(value ?? "").trim()) throw new Error("Campo obrigatório do vestibular ausente: " + fieldId);
@@ -56,8 +65,12 @@ export async function syncConversion(conversion: ParsedRdConversion) {
     const changed = mapped.fields.filter((field) => JSON.stringify(field.values) !== JSON.stringify(
       existing.custom_fields_values?.find((current) => current.field_id === field.field_id)?.values,
     ));
-    if (changed.length) await kommo.updateLeadFields(existing.id, changed);
-    return { status: changed.length ? "updated" as const : "unchanged" as const,
+    const tagsToDelete = oldCourseTags(existing._embedded?.tags);
+    const tagsToAdd = courseTag && !existing._embedded?.tags?.some((tag) => tag.name === courseTag) ? [courseTag] : [];
+    const hasChanges = changed.length > 0 || tagsToAdd.length > 0 || tagsToDelete.length > 0;
+    if (tagsToAdd.length || tagsToDelete.length) await kommo.updateLeadFields(existing.id, changed, { add: tagsToAdd, remove: tagsToDelete });
+    else if (changed.length) await kommo.updateLeadFields(existing.id, changed);
+    return { status: hasChanges ? "updated" as const : "unchanged" as const,
       leadId: existing.id, mappedFields: mapped.mappedFields, warnings: mapped.warnings };
   }
 
@@ -80,7 +93,7 @@ export async function syncConversion(conversion: ParsedRdConversion) {
       existing.status_id,
       [...mapped.fields, ...mapped.fieldsToClear],
       route.tags,
-      obsoleteManagedTags(route.tags),
+      [...obsoleteManagedTags(route.tags), ...oldCourseTags(existing._embedded?.tags)],
     );
     if (company) await kommo.ensureCompanyLink("leads", existing.id, company.id);
     return {

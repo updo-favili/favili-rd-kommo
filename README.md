@@ -72,4 +72,12 @@ Nova inscrição continua em vestibular-2027-1-inscricao. Alterações de horár
 
 A atualização exige o número da inscrição e procura correspondência exata no campo 2018097, inclusive se a oportunidade mudou de funil ou foi encerrada. Mais de uma correspondência causa erro sem gravar. Inscrição ainda inexistente também causa erro, sem criar contato ou oportunidade: verificar a entrega da inscrição inicial e reenviar a atualização.
 
-Somente campos enviados e alterados são gravados. Ausência de código preserva o existente; código novo informado é atualizado. Não altera nome, etapa, responsável ou tags. A integração não envia mensagens; configure a mensagem inicial na Kommo apenas na criação/entrada inicial, sem gatilho genérico de alteração de campos. Essa configuração da Kommo não foi modificada pelo código.
+Somente campos enviados e alterados são gravados. Ausência de código preserva o existente; código novo informado é atualizado. Não altera nome, etapa ou responsável. A tag de curso é atualizada somente quando o curso desejado estiver presente; outras tags são preservadas. A integração não envia mensagens; configure a mensagem inicial na Kommo apenas na criação/entrada inicial, sem gatilho genérico de alteração de campos. Essa configuração da Kommo não foi modificada pelo código.
+
+## Campos complementares e tag de curso
+
+Inscrição e atualização aceitam as onze chaves cf_ informadas para Faz prova, Instituição de origem, Curso de origem, Período atual, Documento, Documento situação, Documento motivo, ENEM ano, ENEM média, ENEM redação e Link do painel. Também aceitam nomes visíveis equivalentes com acentos e separadores. IDs verificados: 2018117 a 2018137, na aba Faculdade Vestibular. Link do painel é URL; demais campos são texto.
+
+Documento contém apenas o nome solicitado. Link do painel recebe a URL estável enviada pelo site; acesso autenticado e links temporários dos arquivos continuam a cargo do painel. Este serviço não acessa os arquivos do Supabase.
+
+O curso desejado (campo 2018103) gera uma tag como CURSO: PSICOLOGIA, junto com VESTIBULAR 2027.1 na criação. O curso de origem não gera tags. Quando o curso muda, remove somente outras tags com o prefixo CURSO: e aplica a atual; sem curso no payload, preserva as tags. Configure o disparo inicial da Kommo sem gatilho genérico de alteração de tags/campos, pois atualizações podem ajustar a tag de curso.

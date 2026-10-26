@@ -3,7 +3,7 @@ import { vestibularEvent, vestibularFieldIds } from "../src/config/vestibular";
 import { buildLeadCustomFields } from "../src/lib/field-mapping";
 it("mapeia os dez campos do vestibular por ID preservando código, número, data e hora como texto",()=>{
   const values=["00001234","TESTE0","Vestibular","Psicologia","Presencial","Limoeiro do Norte","Noite","21/11/2026","18:00","https://example.com/minha-inscricao"];
-  const entries=Object.entries(vestibularFieldIds);
+  const entries=Object.entries(vestibularFieldIds).filter(([,id])=>id<=2018115);
   const fields=entries.map(([name,id])=>({id,name:name.replace("Vestibular - ",""),type:"text"}));
   fields.unshift({id:99,name:"Curso",type:"text"});
   const result=buildLeadCustomFields(fields,{product:"Vestibular 2027.1",source:"Landing Page",event:vestibularEvent,fieldIds:vestibularFieldIds,custom:Object.fromEntries(entries.map(([name],i)=>[name,values[i]]))});

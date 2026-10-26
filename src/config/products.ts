@@ -6,6 +6,7 @@ export type ProductRoute = {
   pipelineName: string; stageName: string; tags: string[];
   fieldIds: Record<string, number>;
   updateOnly?: boolean;
+  courseFieldId?: number;
   identityFieldId?: number;
   requiredFieldIds?: number[];
   derivedCustomFields?: Record<string, unknown>;
@@ -52,6 +53,7 @@ export function routeForConversion(conversion: ParsedRdConversion): ProductRoute
     product: "Vestibular 2027.1", leadName: "Vestibular 2027.1", source: "Landing Page",
     pipelineName: "Faculdade", stageName: "VESTIBULAR 2027.1", tags: ["VESTIBULAR 2027.1"],
     fieldIds: vestibularFieldIds, customFieldNames: Object.keys(vestibularFieldIds),
+    courseFieldId: 2018103,
     identityFieldId: 2018097,
     updateOnly: conversion.eventIdentifier === vestibularUpdateEvent,
     requiredFieldIds: conversion.eventIdentifier === vestibularUpdateEvent ? [2018097] : [2018097, 2018099],

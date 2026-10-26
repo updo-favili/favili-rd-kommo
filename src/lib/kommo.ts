@@ -183,9 +183,15 @@ export class KommoClient {
     }
   }
 
-  async updateLeadFields(id: number, customFields: KommoFieldValue[]): Promise<void> {
+  async updateLeadFields(id: number, customFields: KommoFieldValue[], tags?: { add: string[]; remove: string[] }): Promise<void> {
     await this.request("/leads/" + id, {
-      method: "PATCH", body: JSON.stringify({ custom_fields_values: customFields }),
+      method: "PATCH", body: JSON.stringify({
+        ...(customFields.length ? { custom_fields_values: customFields } : {}),
+        ...(tags ? { _embedded: {
+          tags_to_add: tags.add.map((name) => ({ name })),
+          tags_to_delete: tags.remove.map((name) => ({ name })),
+        } } : {}),
+      }),
     }, 0, "atualizar campos da inscrição");
   }
 
