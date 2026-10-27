@@ -6,7 +6,7 @@ import { KommoClient } from "../src/lib/kommo";
 import { syncConversion } from "../src/lib/sync";
 import { parseRdWebhook } from "../src/lib/rd";
 afterEach(()=>{vi.restoreAllMocks();vi.unstubAllEnvs();});
-it.each(["automation","standard"])("recebe atualização via %s somente na rota correta",async(mode)=>{
+it.each(["automation","standard"])("recebe atualização via %s e distingue evento explícito de snapshot de automação",async(mode)=>{
   vi.stubEnv("RD_WEBHOOK_SECRET","test-secret");vi.stubEnv("KOMMO_SYNC_ENABLED","false");
   const contact={last_conversion:{content:{identifier:vestibularUpdateEvent}},"Vestibular - Nº inscrição":"0001"};
   const body=mode==="automation"?{leads:[contact]}:{event_identifier:vestibularUpdateEvent,contact};
@@ -14,7 +14,9 @@ it.each(["automation","standard"])("recebe atualização via %s somente na rota 
   const response=await handleRdWebhook(request(),{route:vestibularUpdateEvent,secret:"test-secret"});
   expect((await response.json()).mode).toBe("capture");
   for(const route of [vestibularEvent,"escola"]){
-    expect((await (await handleRdWebhook(request(),{route,secret:"test-secret"})).json()).status).toBe("ignored");
+    const result=await (await handleRdWebhook(request(),{route,secret:"test-secret"})).json();
+    if(mode==="automation" && route===vestibularEvent) expect(result).toMatchObject({mode:"capture",receipt:{eventIdentifier:vestibularEvent}});
+    else expect(result.status).toBe("ignored");
   }
 });
 it.each(["found","missing","unchanged"])("atualização %s não cria registros nem redefine etapa ou tags",async(state)=>{

@@ -1,4 +1,4 @@
-import { isVestibularEvent } from "@/config/vestibular";
+import { isVestibularEvent, vestibularEvent, vestibularUpdateEvent } from "@/config/vestibular";
 import { NextRequest, NextResponse } from "next/server";
 import { conversionIdentifierFromContact, parseRdWebhook, sanitizedReceipt, unwrapRdAutomationPayload } from "@/lib/rd";
 import { syncConversion } from "@/lib/sync";
@@ -66,7 +66,10 @@ export async function handleRdWebhook(
       if (isVestibularEvent(automationRoute) && !detected) {
         return NextResponse.json({ ok: true, status: "ignored", reason: "Última conversão sem identificador" });
       }
-      if (automationRoute !== "escola" && detected && detected !== automationRoute) {
+      // RD automations send the current contact snapshot, not the original triggering event.
+      // A later update must not cancel delivery from the dedicated registration flow.
+      const registrationFollowedByUpdate = automationRoute === vestibularEvent && detected === vestibularUpdateEvent;
+      if (automationRoute !== "escola" && detected && detected !== automationRoute && !registrationFollowedByUpdate) {
         return NextResponse.json({ ok: true, status: "ignored", reason: "Última conversão diferente da rota" });
       }
       body = { event_identifier: automationRoute === "escola" ? detected : automationRoute, contact };
